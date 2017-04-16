@@ -5,4 +5,5 @@ package com.example.bhuiy.weatherapp.AccessObject;
  */
 
 public class Weather {
+    
 }
