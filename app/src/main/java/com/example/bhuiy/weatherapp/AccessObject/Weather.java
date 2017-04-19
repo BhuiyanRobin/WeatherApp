@@ -15,6 +15,7 @@ public class Weather {
     @Expose
     private Query query;
 
+    
     public Query getQuery() {
         return query;
     }
