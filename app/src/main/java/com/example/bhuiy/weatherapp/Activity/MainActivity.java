@@ -1,41 +1,45 @@
 package com.example.bhuiy.weatherapp.Activity;
 
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.example.bhuiy.weatherapp.AccessObject.Weather;
+import com.example.bhuiy.weatherapp.AccessObject.WeatherApi;
 import com.example.bhuiy.weatherapp.R;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
+    String fullurl="https://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid in (select woeid from geo.places(1) where woeid=\"1915035\")&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
+    String baseURl="https://query.yahooapis.com/";
+    WeatherApi weatherApi;
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     /**
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
+    private Weather weather;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,8 +55,13 @@ public class MainActivity extends AppCompatActivity {
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-
-
+        weather =new Weather();
+        Retrofit retrofit=new Retrofit.Builder()
+                .baseUrl(baseURl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        weatherApi=retrofit.create(WeatherApi.class);
+        GetWeatherData();
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -64,7 +73,29 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+private void GetWeatherData()
+{
+    Toast.makeText(this, "weather", Toast.LENGTH_SHORT).show();
+    Call<Weather> weatherCall=weatherApi.getWeatherData();
+    weatherCall.enqueue(new Callback<Weather>() {
+        @Override
+        public void onResponse(Call<Weather> call, Response<Weather> response) {
+            Toast.makeText(MainActivity.this, "success", Toast.LENGTH_SHORT).show();
+            Weather weatherData=response.body();
+            Toast.makeText(MainActivity.this, ""+weatherData.getQuery().getCreated(), Toast.LENGTH_SHORT).show();
+            Log.e("weather", "onResponse: "+weatherData.getQuery().getCreated() );
 
+        }
+
+        @Override
+        public void onFailure(Call<Weather> call, Throwable t) {
+            Toast.makeText(MainActivity.this, ""+t.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("weather", "onFailure: "+t.getMessage() );
+
+        }
+    });
+
+}
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
